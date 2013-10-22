@@ -1,6 +1,6 @@
 'use strict';
 if (typeof (define)  == 'undefined') {
-    //define('./2.js',['./bui.js','./htmlparser.js'], function(exports){exports.todo='...';});
+    //define('2.js',['bui.js','htmlparser.js'], function(exports){exports.todo='...';});
     var define = function (name, deps, fun) {
         //Allow for anonymous modules
         if (typeof name !== 'string') {
@@ -29,27 +29,17 @@ if (typeof (define)  == 'undefined') {
         });
         
         for (var i=0,len=deps.length; i<len; i++) {
-            var exist = false;
             var url = deps[i];
-            // Check loaded url
-            for (var j=0,len2=define.loaded.length; j<len2; j++) {
-                if (define.loaded[j] == url) {
-                    exist = true;
-                    break;
-                }
-            }
-            
-            if (!exist) {
-                require(url);
-                // File loaded immediately in Nodejs.
-                if (typeof (window) == 'undefined') {
-                    define.loaded.push(url);
-                }
+            require(url);
+            // File loaded immediately in Nodejs.
+            if (typeof (window) == 'undefined') {
+                define.loaded.push(url);
             }
         }
         define.checkDepend();
     };
     define.loaded = [];
+    define.scripts = ['define.js'];
     define.checkDepend = function () {
         define.modules = define.modules || [];
         var list = define.modules,
@@ -72,8 +62,19 @@ if (typeof (define)  == 'undefined') {
 };
 // require for window
 if (typeof (require) == 'undefined') {
-    // require('./define.js');
+    // require('define.js');
     var require = function(url) { 
+        var exist = false;
+        // Check loaded url
+        for (var j=0,len2=define.scripts.length; j<len2; j++) {
+            if (define.scripts[j] == url) {
+                exist = true;
+                break;
+            }
+        }
+        if (exist) { return; }
+        define.scripts.push(url);
+        
         var callback = function() { 
             // Check depends
             if (typeof (define) != 'undefined' && define.checkDepend) {
